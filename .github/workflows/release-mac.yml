@@ -21,11 +21,11 @@ jobs:
           node-version: '22'
 
       - name: Install dependencies
+        # Lockfile resolves to registry.npmjs.org. Skip electron's postinstall
+        # download (electron-builder fetches electron itself when packaging).
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
-        run: |
-          node -v && npm -v
-          npm install --no-audit --no-fund --loglevel verbose
+        run: npm ci --no-audit --no-fund
 
       - name: Dump npm debug log on failure
         if: failure()
