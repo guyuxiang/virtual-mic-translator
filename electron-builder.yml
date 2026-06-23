@@ -33,6 +33,8 @@ mac:
   identity: null
   gatekeeperAssess: false
   artifactName: VirtualMicTranslator-mac.${ext}
+  extendInfo:
+    NSMicrophoneUsageDescription: "Virtual Mic Translator uses your microphone to capture speech for live translation."
 
 win:
   target:

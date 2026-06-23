@@ -51,6 +51,14 @@ cp -R "$APP_PATH" "/Applications/"
 echo "▸ Removing quarantine flag (Gatekeeper)…"
 xattr -dr com.apple.quarantine "$DEST" 2>/dev/null || true
 
+# Give the app (and its Electron helpers) a stable ad-hoc signature so macOS
+# can PERSIST the microphone permission — otherwise the unsigned helpers get a
+# new identity each launch and macOS re-prompts endlessly.
+echo "▸ Ad-hoc signing so macOS remembers the mic permission…"
+codesign --force --deep --sign - "$DEST" 2>/dev/null || true
+# Clear any stale/confused permission entries so the next launch asks just once.
+tccutil reset Microphone com.openshort.virtual-mic-translator >/dev/null 2>&1 || true
+
 echo ""
 echo "✓ Installed."
 echo "  Open it:  open \"$DEST\""
