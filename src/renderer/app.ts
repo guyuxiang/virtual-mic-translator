@@ -57,6 +57,7 @@ interface AppState {
   audioEl: HTMLAudioElement | null;
   running: boolean;
   statsTimer: number | null;
+  password: string; // entered at login, validated by the server, kept in memory only
 }
 const state: AppState = {
   room: null,
@@ -68,6 +69,7 @@ const state: AppState = {
   audioEl: null,
   running: false,
   statsTimer: null,
+  password: '',
 };
 
 // ── DOM helpers ───────────────────────────────────────────────────
@@ -84,6 +86,11 @@ const micHint = $('mic-hint');
 const virtualDeviceNameEl = $('virtual-device-name');
 const actionBtn = $('action-btn') as HTMLButtonElement;
 const setupInstallBtn = $('setup-install') as HTMLButtonElement;
+const loginScreen = $('login-screen');
+const appMain = $('app-main');
+const loginPassword = $('login-password') as HTMLInputElement;
+const loginError = $('login-error');
+const loginBtn = $('login-btn') as HTMLButtonElement;
 
 // ── Server API (real live-translate contract) ─────────────────────
 const api = CONFIG.server;
@@ -95,7 +102,7 @@ async function createSession(): Promise<{ sessionId: string; organizerIdentity: 
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       organizerName: CONFIG.session.organizerName,
-      password: CONFIG.session.password,
+      password: state.password,
     }),
   });
   if (!resp.ok) throw new Error(`Create session failed (${resp.status}): ${await resp.text()}`);
@@ -492,10 +499,62 @@ window.addEventListener('beforeunload', () => {
   if (state.sessionId) navigator.sendBeacon(url(`${api.sessionsEndpoint}/${state.sessionId}/end`));
 });
 
-// ── Boot ──────────────────────────────────────────────────────────
+// ── Login gate ────────────────────────────────────────────────────
+// The password is NOT stored in the app. It is validated by the server
+// (POST /api/sessions returns 401 if wrong) and kept only in memory.
+function showLoginError(msg: string): void {
+  loginError.textContent = msg;
+  loginError.classList.remove('hidden');
+}
+
+async function login(): Promise<void> {
+  const pw = loginPassword.value;
+  if (!pw) return;
+  loginBtn.disabled = true;
+  loginError.classList.add('hidden');
+  loginBtn.textContent = 'Logging in…';
+  try {
+    const resp = await fetch(url(api.sessionsEndpoint), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ organizerName: CONFIG.session.organizerName, password: pw }),
+    });
+    if (resp.status === 401) {
+      showLoginError('Incorrect password.');
+      return;
+    }
+    if (!resp.ok) {
+      showLoginError(`Server error (${resp.status}). Please try again.`);
+      return;
+    }
+    // Correct — keep the password in memory, discard the validation session.
+    const data = await resp.json().catch(() => null);
+    state.password = pw;
+    if (data?.sessionId) endSession(data.sessionId);
+
+    loginPassword.value = '';
+    loginScreen.classList.add('hidden');
+    appMain.classList.remove('hidden');
+    await boot();
+  } catch {
+    showLoginError('Cannot reach the server. Check your connection.');
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Log in';
+  }
+}
+
+loginBtn.addEventListener('click', () => login());
+loginPassword.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') login();
+  if (loginError && !loginError.classList.contains('hidden')) loginError.classList.add('hidden');
+});
+
+// ── Boot (runs after successful login) ────────────────────────────
 async function boot(): Promise<void> {
   populateLanguages();
   setStatus('idle', 'Ready');
   await checkVirtualDevice();
 }
-boot();
+
+loginPassword.focus();

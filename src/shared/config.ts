@@ -12,8 +12,9 @@ export const CONFIG = {
     translateEndpoint: '/api/translate',
   },
   session: {
-    // SESSION_PASSWORD — must match the server's .env
-    password: 'Aa123456!',
+    // No password stored in code. The user types it on the login screen; it is
+    // validated by the server (POST /api/sessions returns 401 if wrong) and kept
+    // only in memory for the session.
     organizerName: 'desktop',
   },
   languages: [

@@ -192,7 +192,7 @@ await startTranslation(sessionId, targetLanguage);
 ```typescript
 export const CONFIG = {
   server: { baseUrl: 'https://www.openshort.cloud', /* token/sessions/translate endpoints */ },
-  session: { password: 'Aa123456!', organizerName: 'desktop' },   // 见「安全」
+  session: { organizerName: 'desktop' },   // 密码不入代码：登录时输入，服务器校验
   languages: [ /* en ja es fr de ko zh pt ru ar */ ],
   audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
 };
@@ -261,7 +261,7 @@ mic 缓冲 ~200ms │ LiveKit ~30ms │ Gemini ~500ms │ LiveKit ~30ms │ setS
 | API Key | ✅ 仅在服务器，客户端不接触 |
 | WebRTC 加密 | ✅ DTLS-SRTP（LiveKit 内置） |
 | IPC | ✅ `contextBridge` 白名单 |
-| **Session 密码** | ⚠️ `SESSION_PASSWORD` 硬编码在客户端。**这是固有弱点**：客户端密码无论如何都能被逆出（仓库公开后更显眼）。真正安全需服务器侧改造（一次性 token / 设备绑定），与本客户端无关。 |
+| **Session 密码 / 登录** | ✅ 密码**不再硬编码进代码**。打开 App 先弹登录框，用户输入密码 → 调 `POST /api/sessions` 由**服务器校验**（错误返回 401）→ 正确则仅存内存、供后续建会话用。注：客户端密码本质仍属共享口令；更强的方案需服务器侧一次性 token / 设备绑定。 |
 | 代码签名 | ⚠️ 未做正式签名（ad-hoc）。如需消除安装告警 → Apple Developer ID（mac）/ 代码签名证书（win）。 |
 
 ---

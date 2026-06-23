@@ -98,12 +98,21 @@ function createWindow(): void {
   // Screenshot hook for visual verification. Never runs in prod.
   if (process.env.VMT_SCREENSHOT) {
     mainWindow.webContents.once('did-finish-load', () => {
+      const pw = process.env.VMT_TEST_LOGIN;
+      const delay = pw ? 6000 : 2500;
+      if (pw) {
+        setTimeout(() => {
+          mainWindow?.webContents.executeJavaScript(
+            `(() => { const p=document.getElementById('login-password'); p.value=${JSON.stringify(pw)}; document.getElementById('login-btn').click(); })()`
+          );
+        }, 1500);
+      }
       setTimeout(async () => {
         const img = await mainWindow!.webContents.capturePage();
         fs.writeFileSync(process.env.VMT_SCREENSHOT as string, img.toPNG());
         (app as unknown as { isQuitting?: boolean }).isQuitting = true;
         app.quit();
-      }, 2500);
+      }, delay);
     });
   }
 

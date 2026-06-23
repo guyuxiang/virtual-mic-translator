@@ -184,8 +184,9 @@ footer { padding: 12px 18px 18px; }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-primary:active { transform: translateY(1px); }
 .btn-primary:disabled { opacity: 0.55; cursor: default; background: var(--accent); }
-.btn-primary.stop { background: #8a8780; }
-.btn-primary.stop:hover { background: #6f6d66; }
+.btn-primary.stop { background: #d93a2b; }
+.btn-primary.stop:hover { background: #b92e21; }
+.btn-primary.stop:disabled { background: #d93a2b; }
 
 .btn-secondary {
   padding: 8px 14px;
@@ -204,5 +205,56 @@ footer { padding: 12px 18px 18px; }
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-thumb { background: #d7d5c8; border-radius: 6px; border: 2px solid var(--surface); }
 ::-webkit-scrollbar-thumb:hover { background: #c4c2b5; }
+
+/* ── Main app fills the window once logged in ── */
+#app-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Login gate ── */
+.login-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+}
+.login-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  text-align: center;
+}
+.login-title {
+  margin: 0 0 4px;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.login-sub { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
+.login-card input[type="password"] {
+  width: 100%;
+  padding: 11px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  outline: none;
+  margin-bottom: 12px;
+}
+.login-card input[type="password"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.login-error { margin: 0 0 12px; color: #c0392b; font-size: 12.5px; }
 
 .hidden { display: none !important; }
