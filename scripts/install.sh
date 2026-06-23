@@ -31,15 +31,24 @@ APP_PATH="$(/usr/bin/find "$TMP/unpacked" -maxdepth 2 -name '*.app' -type d | he
 [[ -n "$APP_PATH" ]] || { echo "App bundle not found in archive." >&2; exit 1; }
 
 # ── BlackHole virtual audio driver ───────────────────────────────
+DRIVER_JUST_INSTALLED=0
 if system_profiler SPAudioDataType 2>/dev/null | grep -qi "BlackHole"; then
   echo "▸ BlackHole already installed."
 elif command -v brew >/dev/null 2>&1; then
   echo "▸ Installing BlackHole via Homebrew…"
-  brew install blackhole-2ch
+  brew install blackhole-2ch && DRIVER_JUST_INSTALLED=1
 else
   echo "▸ Installing BlackHole (requires your admin password)…"
   curl -fsSL "$BASE/BlackHole.pkg" -o "$TMP/BlackHole.pkg"
-  sudo installer -pkg "$TMP/BlackHole.pkg" -target /
+  sudo installer -pkg "$TMP/BlackHole.pkg" -target / && DRIVER_JUST_INSTALLED=1
+fi
+
+# A freshly installed audio driver does not appear until Core Audio reloads —
+# the BlackHole installer even says "you must reboot". Reloading coreaudiod
+# makes it show up immediately, no reboot needed.
+if [[ "$DRIVER_JUST_INSTALLED" == "1" ]]; then
+  echo "▸ Reloading Core Audio so BlackHole appears (no reboot needed)…"
+  sudo killall coreaudiod 2>/dev/null || true
 fi
 
 # ── Install the app ──────────────────────────────────────────────
@@ -63,3 +72,4 @@ echo ""
 echo "✓ Installed."
 echo "  Open it:  open \"$DEST\""
 echo "  In Zoom/Teams/Meet, choose 'BlackHole 2ch' as your microphone."
+echo "  (If BlackHole still doesn't appear, reboot once — then it's permanent.)"
