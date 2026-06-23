@@ -140,18 +140,29 @@ async function fetchTokenUsage(sessionId: string): Promise<number> {
 // ── Devices ───────────────────────────────────────────────────────
 // Labels are only populated after mic permission is granted, so we unlock
 // them with a throwaway getUserMedia first.
-async function refreshDevices(): Promise<void> {
+let labelsUnlocked = false;
+
+// One-time getUserMedia probe to reveal device labels. This triggers the macOS
+// mic-permission prompt exactly once. IMPORTANT: never call getUserMedia from
+// the `devicechange` handler — on macOS, starting+stopping a stream itself
+// fires `devicechange`, which would loop the permission prompt forever.
+async function unlockMicLabels(): Promise<void> {
+  if (labelsUnlocked) return;
   try {
     const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
     probe.getTracks().forEach((t) => t.stop());
+    labelsUnlocked = true;
   } catch (e) {
     console.warn('mic probe failed (labels may be hidden):', e);
   }
+}
 
+// Enumerate devices and (re)populate the UI. Does NOT call getUserMedia.
+async function populateDevices(): Promise<void> {
   const devices = await navigator.mediaDevices.enumerateDevices();
 
-  // Mic dropdown.
   const mics = devices.filter((d) => d.kind === 'audioinput');
+  const prev = state.micDeviceId;
   micSelect.innerHTML = '';
   for (const d of mics) {
     const opt = document.createElement('option');
@@ -159,10 +170,20 @@ async function refreshDevices(): Promise<void> {
     opt.textContent = d.label || `Microphone ${micSelect.length + 1}`;
     micSelect.appendChild(opt);
   }
-  if (mics.length) state.micDeviceId = micSelect.value = mics[0].deviceId;
+  // Preserve the user's current selection across re-enumerations.
+  if (mics.some((m) => m.deviceId === prev)) {
+    micSelect.value = prev;
+  } else if (mics.length) {
+    state.micDeviceId = micSelect.value = mics[0].deviceId;
+  }
 
   // Resolve the virtual audio output sink to route translated audio into.
   resolveVirtualSink(devices);
+}
+
+async function refreshDevices(): Promise<void> {
+  await unlockMicLabels();
+  await populateDevices();
 }
 
 function resolveVirtualSink(devices: MediaDeviceInfo[]): void {
@@ -454,7 +475,13 @@ setupInstallBtn.addEventListener('click', () => installDriver());
 $('setup-retry').addEventListener('click', () => checkVirtualDevice());
 $('setup-dismiss').addEventListener('click', () => setupGuide.classList.add('hidden'));
 
-navigator.mediaDevices.addEventListener('devicechange', () => refreshDevices());
+// Re-enumerate on device changes — but only enumerate (no getUserMedia), and
+// debounce, so we never re-trigger the macOS mic-permission prompt.
+let deviceChangeTimer = 0;
+navigator.mediaDevices.addEventListener('devicechange', () => {
+  clearTimeout(deviceChangeTimer);
+  deviceChangeTimer = window.setTimeout(() => populateDevices(), 500);
+});
 
 electronAPI.onTrayAction((action) => {
   if (action === 'start') start();
