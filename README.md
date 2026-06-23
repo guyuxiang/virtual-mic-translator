@@ -8,18 +8,22 @@ getUserMedia(mic) → LiveKit publishTrack → server TranslationBridge → Gemi
    audio.setSinkId(virtual mic) → Zoom/Teams pick it as the microphone
 ```
 
-## Install on macOS (one line)
+## Install
 
-No Apple Developer account needed — the app is ad-hoc signed and the installer
-strips the Gatekeeper quarantine flag for you:
+The virtual microphone driver is bundled and installed for you — no manual
+download. Neither installer is commercially code-signed (see notes below).
+
+### macOS — one line
+
+No Apple Developer account needed: the app is ad-hoc signed and the installer
+strips the Gatekeeper quarantine flag.
 
 ```bash
 curl -fsSL https://github.com/guyuxiang/virtual-mic-translator/releases/latest/download/install.sh | bash
 ```
 
-This downloads the latest app, installs the **BlackHole** virtual microphone,
-copies the app to `/Applications`, and de-quarantines it. Then pick
-**BlackHole 2ch** as your mic in Zoom/Teams/Meet.
+Installs the **BlackHole** virtual mic, copies the app to `/Applications`, and
+de-quarantines it. Then pick **BlackHole 2ch** as your mic in Zoom/Teams/Meet.
 
 Uninstall:
 
@@ -27,18 +31,45 @@ Uninstall:
 curl -fsSL https://github.com/guyuxiang/virtual-mic-translator/releases/latest/download/uninstall.sh | bash
 ```
 
-Releases are built automatically on a GitHub macOS runner — push a tag
-(`git tag v1.0.0 && git push --tags`) to trigger `.github/workflows/release-mac.yml`.
+### Windows — download & run
 
-## Prerequisites
+**[⬇ Download VirtualMicTranslator-Setup.exe](https://github.com/guyuxiang/virtual-mic-translator/releases/latest/download/VirtualMicTranslator-Setup.exe)**
 
-1. The `live-translate` server running locally on `http://localhost:3000`.
-2. A virtual audio device:
-   - **macOS**: `brew install blackhole-2ch`
-   - **Windows**: [VB-Cable](https://vb-audio.com/Cable/)
-   - **Linux**: `bash scripts/setup-linux.sh`
+Or via PowerShell:
 
-   The app detects this on launch and shows install instructions if missing.
+```powershell
+$u="https://github.com/guyuxiang/virtual-mic-translator/releases/latest/download/VirtualMicTranslator-Setup.exe"; $o="$env:TEMP\VMT-Setup.exe"; iwr $u -OutFile $o; Start-Process $o
+```
+
+The installer bundles **VB-Cable**, installs it silently, and restores your
+default speaker (so system sound keeps working). Then pick **CABLE Output** as
+your mic in Zoom/Teams/Meet.
+
+> If SmartScreen warns ("unknown publisher"), click **More info → Run anyway** —
+> the installer is unsigned.
+
+### How releases are built
+
+Both installers are produced automatically on **free GitHub runners** (no Mac or
+Windows machine of your own needed). Push a tag to trigger them:
+
+```bash
+git tag v1.0.1 && git push origin v1.0.1
+```
+
+→ `.github/workflows/release-mac.yml` (macOS universal) and
+`release-windows.yml` (NSIS .exe) build and attach their installers to the
+GitHub Release for that tag.
+
+## How it connects
+
+- The client talks to the public server at `https://www.openshort.cloud`
+  (hardcoded in `src/shared/config.ts` — no configuration needed).
+- The virtual audio driver is installed by the installer. For manual dev runs,
+  install it yourself:
+  - **macOS**: `brew install blackhole-2ch`
+  - **Windows**: [VB-Cable](https://vb-audio.com/Cable/)
+  - **Linux**: `bash scripts/setup-linux.sh`
 
 ## Develop / run
 

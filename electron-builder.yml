@@ -54,3 +54,4 @@ nsis:
   allowElevation: true
   createDesktopShortcut: true
   include: build/installer.nsh
+  artifactName: VirtualMicTranslator-Setup.${ext}

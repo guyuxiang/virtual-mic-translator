@@ -1,0 +1,58 @@
+name: Build & Release Windows
+
+# Push a tag like v1.0.0 to build the Windows installer on a free GitHub
+# windows runner and publish it to the same GitHub Release as the mac build.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-win:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install dependencies
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci --no-audit --no-fund
+
+      - name: Build (tsc + esbuild)
+        run: npm run build
+
+      - name: Fetch virtual-audio drivers (not stored in git)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path drivers/windows | Out-Null
+          Write-Host "Downloading VB-Cable..."
+          Invoke-WebRequest -Uri "https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack43.zip" -OutFile vbcable.zip
+          Expand-Archive -Path vbcable.zip -DestinationPath drivers/windows -Force
+          Write-Host "Downloading SoundVolumeView..."
+          Invoke-WebRequest -Uri "https://www.nirsoft.net/utils/soundvolumeview-x64.zip" -OutFile svv.zip `
+            -Headers @{ "User-Agent" = "Mozilla/5.0"; "Referer" = "https://www.nirsoft.net/" }
+          Expand-Archive -Path svv.zip -DestinationPath drivers/windows -Force
+          Get-ChildItem drivers/windows | Select-Object Name, Length
+
+      - name: Package Windows installer (NSIS, unsigned)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --win --x64 --publish never
+
+      - name: List artifacts
+        shell: pwsh
+        run: Get-ChildItem release
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/VirtualMicTranslator-Setup.exe
+          fail_on_unmatched_files: false
