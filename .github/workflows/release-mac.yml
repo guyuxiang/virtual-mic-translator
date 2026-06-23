@@ -1,0 +1,64 @@
+name: Build & Release macOS
+
+# Push a tag like v1.0.0 to build the mac app on a free GitHub macOS runner
+# and publish it (+ installer scripts + BlackHole.pkg) to a GitHub Release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (tsc + esbuild)
+        run: npm run build
+
+      - name: Package mac app (universal, ad-hoc signed)
+        # No Apple Developer account: disable cert discovery so electron-builder
+        # ad-hoc signs (required for Apple Silicon to launch at all).
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npx electron-builder --mac --universal --publish never
+
+      - name: Fetch BlackHole installer (.pkg) for offline install
+        run: |
+          brew install blackhole-2ch || true
+          PKG="$(/usr/bin/find ~/Library/Caches/Homebrew/downloads -iname '*lackHole*ch*.pkg' 2>/dev/null | head -1)"
+          if [ -n "$PKG" ]; then
+            cp "$PKG" "release/BlackHole.pkg"
+            echo "Bundled BlackHole pkg: $PKG"
+          else
+            echo "::warning::BlackHole pkg not found in Homebrew cache; install.sh will fall back to brew."
+          fi
+
+      - name: Stage installer scripts
+        run: |
+          cp scripts/install.sh release/install.sh
+          cp scripts/uninstall.sh release/uninstall.sh
+
+      - name: List artifacts
+        run: ls -la release
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/VirtualMicTranslator-mac.zip
+            release/BlackHole.pkg
+            release/install.sh
+            release/uninstall.sh
+          fail_on_unmatched_files: false

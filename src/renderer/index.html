@@ -1,0 +1,53 @@
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Virtual Mic Translator</title>
+<link rel="stylesheet" href="style.css" />
+
+<header>
+  <h1>Virtual Mic Translator</h1>
+</header>
+
+<section class="controls">
+  <div class="control-row">
+    <label for="mic-select">Microphone</label>
+    <select id="mic-select"><option value="">Loading…</option></select>
+  </div>
+  <div class="control-row">
+    <label for="lang-select">Translate to</label>
+    <select id="lang-select"></select>
+  </div>
+</section>
+
+<section class="status-bar">
+  <span class="status-dot idle" id="status-dot"></span>
+  <span id="status-text">Ready</span>
+  <span class="stats" id="stats"></span>
+</section>
+
+<section class="setup-guide hidden" id="setup-guide">
+  <h2>⚙️ Virtual audio driver required</h2>
+  <p>This lets Zoom / Teams / Meet hear the translated audio. One-time setup.</p>
+  <pre id="setup-instructions"></pre>
+  <div class="setup-actions">
+    <button id="setup-install" class="btn-primary hidden">⤓ Install now</button>
+    <button id="setup-retry" class="btn-secondary">Re-detect</button>
+    <button id="setup-dismiss" class="btn-secondary">Skip for now</button>
+  </div>
+</section>
+
+<section class="transcript-section">
+  <h3>Transcript</h3>
+  <div class="transcript" id="transcript">
+    <p class="transcript-placeholder">Click <strong>Start Translating</strong> and begin speaking…</p>
+  </div>
+</section>
+
+<section class="mic-hint hidden" id="mic-hint">
+  <p>In your meeting app, choose <strong id="virtual-device-name">virtual device</strong> as your microphone.</p>
+</section>
+
+<footer>
+  <button id="action-btn" class="btn-primary">▶ Start Translating</button>
+</footer>
+
+<script src="../../dist/renderer/app.js"></script>

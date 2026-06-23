@@ -1,0 +1,27 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E18A6B"/>
+      <stop offset="1" stop-color="#C75F3C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- coral rounded-square tile -->
+  <rect x="96" y="96" width="832" height="832" rx="210" fill="url(#tile)"/>
+
+  <!-- back bubble: white, holds the source glyph 文 -->
+  <g>
+    <rect x="250" y="300" width="370" height="270" rx="64" fill="#ffffff"/>
+    <path d="M300 552 l0 92 -86 -64 z" fill="#ffffff"/>
+    <text x="435" y="470" font-family="'Noto Sans CJK SC','Noto Sans CJK','Segoe UI',sans-serif"
+          font-size="200" font-weight="700" fill="#C75F3C" text-anchor="middle">文</text>
+  </g>
+
+  <!-- front bubble: coral with white edge, holds the target glyph A -->
+  <g>
+    <rect x="430" y="452" width="356" height="262" rx="62" fill="#C2562F" stroke="#ffffff" stroke-width="20"/>
+    <path d="M724 700 l0 92 86 -64 z" fill="#C2562F"/>
+    <text x="608" y="622" font-family="'Inter','Segoe UI',Arial,sans-serif"
+          font-size="196" font-weight="700" fill="#ffffff" text-anchor="middle">A</text>
+  </g>
+</svg>

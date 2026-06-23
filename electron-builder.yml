@@ -1,0 +1,56 @@
+appId: com.openshort.virtual-mic-translator
+productName: Virtual Mic Translator
+copyright: Copyright © 2026
+
+directories:
+  output: release
+
+files:
+  - dist/**/*
+  - src/renderer/index.html
+  - src/renderer/style.css
+  - src/renderer/fonts/**/*
+  - assets/icon.png
+  - package.json
+
+# Bundle the VB-Cable installer (Windows). Drop VBCABLE_Setup_x64.exe into
+# drivers/windows/ before building — it gets placed at resources/drivers/.
+extraResources:
+  - from: drivers/windows
+    to: drivers
+    filter:
+      - "**/*"
+
+mac:
+  category: public.app-category.utilities
+  target:
+    - target: zip
+      arch: universal
+  icon: assets/icon.icns
+  # No Apple Developer account → ad-hoc signing (free). Users de-quarantine
+  # via the terminal installer. Apple Silicon still launches (ad-hoc satisfies
+  # the arm64 "must be signed" rule).
+  identity: null
+  gatekeeperAssess: false
+  artifactName: VirtualMicTranslator-mac.${ext}
+
+win:
+  target:
+    - nsis
+  icon: assets/icon.ico
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Utility
+  icon: assets/icon.png
+
+nsis:
+  oneClick: true
+  # perMachine:true elevates the whole installer once (admin), so the bundled
+  # VB-Cable driver install inherits elevation — no second UAC prompt.
+  perMachine: true
+  allowElevation: true
+  createDesktopShortcut: true
+  include: build/installer.nsh
