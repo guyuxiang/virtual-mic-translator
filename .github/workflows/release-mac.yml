@@ -18,11 +18,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # Retry once to dodge the intermittent npm "Exit handler never called!" bug.
+        run: npm ci --no-audit --no-fund || { rm -rf node_modules; npm ci --no-audit --no-fund; }
 
       - name: Build (tsc + esbuild)
         run: npm run build
