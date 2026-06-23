@@ -22,8 +22,12 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        # Retry once to dodge the intermittent npm "Exit handler never called!" bug.
-        run: npm ci --no-audit --no-fund || { rm -rf node_modules; npm ci --no-audit --no-fund; }
+        # Skip electron's postinstall binary download — it triggers npm's
+        # "Exit handler never called!" bug. electron-builder downloads the
+        # electron dist itself during packaging, so this is safe.
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+        run: npm ci --no-audit --no-fund
 
       - name: Build (tsc + esbuild)
         run: npm run build
